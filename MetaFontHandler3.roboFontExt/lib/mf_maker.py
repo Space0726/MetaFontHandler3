@@ -32,8 +32,10 @@ def ufo2mf(destPath):
 
 	# Get glyphs from UFO and Convert to Metafont
 	glyphList = [f for f in os.listdir(DIR_UFO) if fnextension (f) == 'glif']
+	# Get font width
+	fontWidth = getFontWdith(DIR_UFO, glyphList)
 	for glyph in glyphList:
-		convertToMetafont(glyph, DIR_UFO, DIR_METAFONT_RADICAL, DIR_METAFONT_COMBINATION)
+		convertToMetafont(glyph, DIR_UFO, DIR_METAFONT_RADICAL, DIR_METAFONT_COMBINATION, fontWidth)
 
 	return None
 
@@ -72,7 +74,7 @@ class numberToCharacterDict:
 def numberToCharacter(string):
     return ''.join([w if w.isalpha() else numberToCharacterDict.getChar(w) for w in list(string)])
 
-def convertToMetafont(glyphName, dirUFO, dirRadical, dirCombination):
+def convertToMetafont(glyphName, dirUFO, dirRadical, dirCombination, fontWidth):
 	global xmlData
 
 	# Initialize points
@@ -169,8 +171,8 @@ def convertToMetafont(glyphName, dirUFO, dirRadical, dirCombination):
 				# print("length:", len(points), ", idx:", idx)
 				points[idx].name = name
 				points[idx].type = node[i].attributes['type'].value
-				points[idx].x = str(float(node[i].attributes['x'].value)/1000)
-				points[idx].y = str(float(node[i].attributes['y'].value)/1000)
+				points[idx].x = str(float(node[i].attributes['x'].value) / fontWidth) #divide as fontWidth
+				points[idx].y = str(float(node[i].attributes['y'].value) / fontWidth)
 				points[idx].idx = pointCnt
 				pointCnt = pointCnt + 1
 
@@ -384,13 +386,14 @@ def convertToMetafont(glyphName, dirUFO, dirRadical, dirCombination):
 
 			pointName = points[curIdx].name[1:]
 			# *** Changed float -> convertFloatToStr() *** #
+			# divide as fontWdith
 			if points[nextIdx].type == "curve":
-				fp.write("x" + pointName + "1 := (" + convertFloatToStr(float(points[curIdx].controlPoints[0][0]) * 0.001) + " + " + curCustomer + " + moveSizeOfH) * Width " + curPenW +";	")
-				fp.write("y" + pointName + "1 := (" + convertFloatToStr(float(points[curIdx].controlPoints[0][1]) * 0.001) + " + moveSizeOfV) * Height " + curPenH +";\n")
+				fp.write("x" + pointName + "1 := (" + convertFloatToStr(float(points[curIdx].controlPoints[0][0]) / fontWidth) + " + " + curCustomer + " + moveSizeOfH) * Width " + curPenW +";	")
+				fp.write("y" + pointName + "1 := (" + convertFloatToStr(float(points[curIdx].controlPoints[0][1]) / fontWidth) + " + moveSizeOfV) * Height " + curPenH +";\n")
 			#	fp.write("x" + pointName + "1 := x" + pointName + "1 - (1 - curveRate)*(" + "x" + pointName + "1 - x" + pointName + ");	")
 			#	fp.write("y" + pointName + "1 := y" + pointName + "1 - (1 - curveRate)*(" + "y" + pointName + "1 - y" + pointName + ");\n")
-				fp.write("x" + pointName + "2 := (" + convertFloatToStr(float(points[curIdx].controlPoints[1][0]) * 0.001) + " + " + nextCustomer + " + moveSizeOfH) * Width " + nextPenW +";	")
-				fp.write("y" + pointName + "2 := (" + convertFloatToStr(float(points[curIdx].controlPoints[1][1]) * 0.001) + " + moveSizeOfV) * Height " + nextPenH +";\n")
+				fp.write("x" + pointName + "2 := (" + convertFloatToStr(float(points[curIdx].controlPoints[1][0]) / fontWidth) + " + " + nextCustomer + " + moveSizeOfH) * Width " + nextPenW +";	")
+				fp.write("y" + pointName + "2 := (" + convertFloatToStr(float(points[curIdx].controlPoints[1][1]) / fontWidth) + " + moveSizeOfV) * Height " + nextPenH +";\n")
 			#	fp.write("x" + pointName + "2 := x" + pointName + "2 - (1 - curveRate)*(" + "x" + pointName + "2 - x" + pointName + ");	")
 			#	fp.write("y" + pointName + "2 := y" + pointName + "2 - (1 - curveRate)*(" + "y" + pointName + "2 - y" + pointName + ");\n")
 			elif points[nextIdx].type == "qcurve":
@@ -398,21 +401,21 @@ def convertToMetafont(glyphName, dirUFO, dirRadical, dirCombination):
 				for j in range(0, size):
 					if size % 2 == 1 and j == size / 2:
 						if penWidth[curPenWidthIdx] > penWidth[nextPenWidthIdx]:
-							fp.write("x" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][0]) * 0.001) + " + " + curCustomer + " + moveSizeOfH) * Width " + curPenW +";	")
+							fp.write("x" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][0]) / fontWidth) + " + " + curCustomer + " + moveSizeOfH) * Width " + curPenW +";	")
 						else:
-							fp.write("x" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][0]) * 0.001) + " + " + nextCustomer + " + moveSizeOfH) * Width " + nextPenW +";	")
+							fp.write("x" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][0]) / fontWidth) + " + " + nextCustomer + " + moveSizeOfH) * Width " + nextPenW +";	")
 
 						if penHeight[curPenHeightIdx] > penHeight[nextPenHeightIdx]:
-							fp.write("y" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][1]) * 0.001) + " + moveSizeOfV) * Height " + curPenH +";\n")
+							fp.write("y" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][1]) / fontWidth) + " + moveSizeOfV) * Height " + curPenH +";\n")
 						else:
-							fp.write("y" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][1]) * 0.001) + " + moveSizeOfV) * Height " + nextPenH +";\n")
+							fp.write("y" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][1]) / fontWidth) + " + moveSizeOfV) * Height " + nextPenH +";\n")
 
 					elif j < size / 2:
-						fp.write("x" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][0]) * 0.001) + " + " + curCustomer + " + moveSizeOfH) * Width " + curPenW +";	")
-						fp.write("y" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][1]) * 0.001) + " + moveSizeOfV) * Height " + curPenH +";\n")
+						fp.write("x" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][0]) / fontWidth) + " + " + curCustomer + " + moveSizeOfH) * Width " + curPenW +";	")
+						fp.write("y" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][1]) / fontWidth) + " + moveSizeOfV) * Height " + curPenH +";\n")
 					else:
-						fp.write("x" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][0]) * 0.001) + " + " + nextCustomer + " + moveSizeOfH) * Width " + nextPenW +";	")
-						fp.write("y" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][1]) * 0.001) + " + moveSizeOfV) * Height " + nextPenH +";\n")
+						fp.write("x" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][0]) / fontWidth) + " + " + nextCustomer + " + moveSizeOfH) * Width " + nextPenW +";	")
+						fp.write("y" + pointName + str(j+1) + " := (" + convertFloatToStr(float(points[curIdx].controlPoints[j][1]) / fontWidth) + " + moveSizeOfV) * Height " + nextPenH +";\n")
 
 			#		fp.write("x" + pointName + str(j+1) + " := x" + pointName + str(j+1) + " - (1 - curveRate) * (" + "x" + pointName + str(j+1) + " - x" + pointName + ");	")
 			#		fp.write("y" + pointName + str(j+1) + " := y" + pointName + str(j+1) + " - (1 - curveRate) * (" + "y" + pointName + str(j+1) + " - y" + pointName + ");\n")
@@ -517,3 +520,24 @@ def convertToMetafont(glyphName, dirUFO, dirRadical, dirCombination):
 	return None
 
 # ufo2mf()
+
+# get components width
+def getFontWdith(DIR_UFO, glifs):
+	widthDic = {}
+
+	for glif in glifs:
+		glif = DIR_UFO + '/' + glif
+		glifData = minidom.parse(glif)
+		components = glifData.getElementsByTagName('component')
+
+		if len(components) != 0:
+			advance = glifData.getElementsByTagName('advance')
+			width = advance[0].getAttribute('width')
+			if width in widthDic:
+				widthDic[width] += 1
+			else:
+				widthDic[width] = 1
+
+	fontWidth = max(widthDic.keys(), key=(lambda k: widthDic[k]))
+
+	return float(fontWidth)
