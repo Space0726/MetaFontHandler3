@@ -77,9 +77,10 @@ def numberToCharacter(string):
 def convertToMetafont(glyphName, dirUFO, dirRadical, dirCombination, fontWidth):
 	global xmlData
 
+	totalNum = 400
 	# Initialize points
 	points = []
-	for i in range(0, 200):
+	for i in range(0, totalNum):
 		points.append(Point())
 		points[i].controlPoints = []
 
@@ -129,15 +130,15 @@ def convertToMetafont(glyphName, dirUFO, dirRadical, dirCombination, fontWidth):
 
 		# Get UFO data by xml parser
 		UNDEFINED = 9999
-		leftP = [[UNDEFINED for col in range(2)] for row in range(200)]
-		rightP = [[UNDEFINED for col in range(2)] for row in range(200)]
-		diffP = [[0 for col in range(2)] for row in range(200)]
-		dependLX = [0 for i in range(200)]
-		dependRX = [0 for i in range(200)]
-		dependLY = [0 for i in range(200)]
-		dependRY = [0 for i in range(200)]
-		penWidth = [-1 for i in range(200)]
-		penHeight = [-1 for i in range(200)]
+		leftP = [[UNDEFINED for col in range(2)] for row in range(totalNum)]
+		rightP = [[UNDEFINED for col in range(2)] for row in range(totalNum)]
+		diffP = [[0 for col in range(2)] for row in range(totalNum)]
+		dependLX = [0 for i in range(totalNum)]
+		dependRX = [0 for i in range(totalNum)]
+		dependLY = [0 for i in range(totalNum)]
+		dependRY = [0 for i in range(totalNum)]
+		penWidth = [-1 for i in range(totalNum)]
+		penHeight = [-1 for i in range(totalNum)]
 		cp = []
 		cpX = []
 		cpY = []
@@ -513,7 +514,7 @@ def convertToMetafont(glyphName, dirUFO, dirRadical, dirCombination, fontWidth):
 		# last
 
 		fp.write("\n% pen labels\n");
-		fp.write("penlabels(range 1 thru 200);\n");
+		fp.write("penlabels(range 1 thru %d);\n" % totalNum);
 		fp.write("enddef;\n\n");
 
 		fp.close()
